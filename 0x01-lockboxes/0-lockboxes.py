@@ -1,40 +1,27 @@
 #!/usr/bin/python3
-"""
-Module for the canUnlockAll function
-"""
+"""Method that determines if all boxes can be opened"""
 
 
 def canUnlockAll(boxes):
     """
-    Determines if all boxes can be opened
+    Function that determines if all boxes can be unlocked
     Args:
-        boxes (list): List of lists where each inner list contains keys
+        boxes: list of lists containing keys
     Returns:
-        bool: True if all boxes can be opened, False otherwise
+        True if all boxes can be unlocked, False otherwise
     """
-    if not boxes or not isinstance(boxes, list):
-        return False
-
     n = len(boxes)
-    if n == 0:
-        return True
+    seen_boxes = set([0])
+    unseen_boxes = set(boxes[0]).difference(set([0]))
 
-    # Set to keep track of boxes we can open
-    unlocked = {0}
-    # Set to keep track of new keys we find
-    keys = set(boxes[0])
+    while len(unseen_boxes) > 0:
+        boxIdx = unseen_boxes.pop()
 
-    # While we keep finding new keys
-    while keys:
-        # Get a key from our set of keys
-        key = keys.pop()
-        
-        # If this key opens a new box (key is valid and box not yet unlocked)
-        if key < n and key not in unlocked:
-            # Add this box to our unlocked set
-            unlocked.add(key)
-            # Add all keys from this box to our keys set
-            keys.update(boxes[key])
+        if not boxIdx or boxIdx >= n:
+            continue
 
-    # Return True if we could unlock all boxes, False otherwise
-    return len(unlocked) == n
+        if boxIdx not in seen_boxes:
+            unseen_boxes = unseen_boxes.union(boxes[boxIdx])
+            seen_boxes.add(boxIdx)
+
+    return n == len(seen_boxes)
