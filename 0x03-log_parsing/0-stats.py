@@ -1,68 +1,86 @@
 #!/usr/bin/python3
 """
-Script that reads stdin line by line and computes metrics
+Script that reads stdin line by line and computes metrics.
 """
+
+
 import sys
-import re
 
 
-def print_stats(total_size, status_codes):
+def print_metrics(file_size, status_codes):
     """
-    Print accumulated statistics
+    Print accumulated metrics.
+    Args:
+        file_size: Total file size
+        status_codes: Dictionary of status codes and their counts
     """
-    print("File size: {}".format(total_size))
+    print("File size: {}".format(file_size))
     for code in sorted(status_codes.keys()):
         if status_codes[code] > 0:
             print("{}: {}".format(code, status_codes[code]))
 
 
-def validate_line(line):
+def process_line(line, status_codes):
     """
-    Validate if a line matches the expected format using regex
-    Returns status_code and file_size if valid, None otherwise
+    Process a single line and extract status code and file size.
+    Args:
+        line: Input line to process
+        status_codes: Dictionary of status codes
+    Returns:
+        file_size: Size from the line, or 0 if invalid
     """
-    pattern = r'^[\d\.]+ - \[.+\] "GET /projects/260 HTTP/1.1" (\d+) (\d+)$'
-    match = re.match(pattern, line.strip())
-    if match:
-        status_code = int(match.group(1))
-        file_size = int(match.group(2))
-        return status_code, file_size
-    return None
+    try:
+        parts = line.split()
+        # Check if line has enough parts
+        if len(parts) < 2:
+            return 0
+
+        # Get file size from last element
+        file_size = int(parts[-1])
+
+        # Get status code from second to last element
+        status_code = int(parts[-2])
+
+        # Update status code count if it's valid
+        if status_code in status_codes:
+            status_codes[status_code] += 1
+
+        return file_size
+
+    except (IndexError, ValueError):
+        return 0
 
 
 def main():
     """
-    Main function to process the logs
+    Main function to process stdin and compute metrics.
     """
-    total_size = 0
+    total_file_size = 0
     line_count = 0
     status_codes = {
-        200: 0, 301: 0, 400: 0, 401: 0,
-        403: 0, 404: 0, 405: 0, 500: 0
+        200: 0,
+        301: 0,
+        400: 0,
+        401: 0,
+        403: 0,
+        404: 0,
+        405: 0,
+        500: 0
     }
 
     try:
         for line in sys.stdin:
-            line = line.strip()
-            result = validate_line(line)
-            
-            if result:
-                status_code, file_size = result
-                
-                # Update metrics only if status code is valid
-                if status_code in status_codes:
-                    status_codes[status_code] += 1
-                total_size += file_size
-                
-                line_count += 1
-                if line_count % 10 == 0:
-                    print_stats(total_size, status_codes)
+            line_count += 1
+            total_file_size += process_line(line, status_codes)
+
+            if line_count % 10 == 0:
+                print_metrics(total_file_size, status_codes)
 
     except KeyboardInterrupt:
-        print_stats(total_size, status_codes)
-        sys.exit(0)
+        print_metrics(total_file_size, status_codes)
+        raise
 
-    print_stats(total_size, status_codes)
+    print_metrics(total_file_size, status_codes)
 
 
 if __name__ == "__main__":
