@@ -1,45 +1,32 @@
 #!/usr/bin/python3
-"""
-Module for validating UTF-8 encoding
-"""
+"""UTF-8 Validation"""
+
+
+def get_leading_set_bits(num):
+    """returns the number of leading set bits (1)"""
+    set_bits = 0
+    helper = 1 << 7
+    while helper & num:
+        set_bits += 1
+        helper = helper >> 1
+    return set_bits
 
 
 def validUTF8(data):
-    """
-    Determines if a given data set represents a valid UTF-8 encoding.
-    
-    Args:
-        data (list): List of integers where each integer represents 1 byte of data
-        
-    Returns:
-        bool: True if data is a valid UTF-8 encoding, else False
-    """
-    # Counter for remaining bytes in current character
-    remaining_bytes = 0
-
-    # Iterate through each byte in the data
-    for byte in data:
-        # Get only the 8 least significant bits
-        byte = byte & 0xFF
-
-        # If we're not currently in a multi-byte sequence
-        if remaining_bytes == 0:
-            # Count leading 1s to determine bytes in sequence
-            if byte >> 7 == 0:  # 1 byte character (0xxxxxxx)
-                remaining_bytes = 0
-            elif byte >> 5 == 0b110:  # 2 byte character (110xxxxx)
-                remaining_bytes = 1
-            elif byte >> 4 == 0b1110:  # 3 byte character (1110xxxx)
-                remaining_bytes = 2
-            elif byte >> 3 == 0b11110:  # 4 byte character (11110xxx)
-                remaining_bytes = 3
-            else:  # Invalid starting byte
+    """determines if a given data set represents a valid UTF-8 encoding"""
+    bits_count = 0
+    for i in range(len(data)):
+        if bits_count == 0:
+            bits_count = get_leading_set_bits(data[i])
+            '''1-byte (format: 0xxxxxxx)'''
+            if bits_count == 0:
+                continue
+            '''a character in UTF-8 can be 1 to 4 bytes long'''
+            if bits_count == 1 or bits_count > 4:
                 return False
         else:
-            # Check if byte is a valid continuation byte (10xxxxxx)
-            if byte >> 6 != 0b10:
+            '''checks if current byte has format 10xxxxxx'''
+            if not (data[i] & (1 << 7) and not (data[i] & (1 << 6))):
                 return False
-            remaining_bytes -= 1
-
-    # Check if all characters were complete
-    return remaining_bytes == 0
+        bits_count -= 1
+    return bits_count == 0
