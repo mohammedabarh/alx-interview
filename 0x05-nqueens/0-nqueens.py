@@ -1,47 +1,47 @@
 #!/usr/bin/python3
 """
-Solves the N Queens problem using backtracking.
+Solves the N Queens problem.
 Usage: nqueens N
-Prints all solutions for placing N non-attacking queens on an N×N chessboard.
+Prints every possible solution to the problem.
 """
 import sys
 
-def print_solutions(solutions):
-    for sol in solutions:
-        print(sol)
-
-def is_safe(row, col, solution):
-    for r, c in solution:
+def is_safe(queens, row, col):
+    """Check if a queen can be placed at (row, col)."""
+    for r, c in queens:
         if c == col or abs(row - r) == abs(col - c):
             return False
     return True
 
-def solve_nqueens(N, row=0, solution=[], solutions=[]):
-    if row == N:
-        solutions.append([pos[:] for pos in solution])
+def solve(n, row, queens, solutions):
+    """Recursively solve the N Queens problem."""
+    if row == n:
+        solutions.append([q[:] for q in queens])
         return
-    for col in range(N):
-        if is_safe(row, col, solution):
-            solution.append([row, col])
-            solve_nqueens(N, row + 1, solution, solutions)
-            solution.pop()
+    for col in range(n):
+        if is_safe(queens, row, col):
+            queens.append([row, col])
+            solve(n, row + 1, queens, solutions)
+            queens.pop()
 
 def main():
+    """Main entry point."""
     if len(sys.argv) != 2:
         print("Usage: nqueens N")
         sys.exit(1)
     try:
-        N = int(sys.argv[1])
-    except ValueError:
+        n = int(sys.argv[1])
+    except Exception:
         print("N must be a number")
         sys.exit(1)
-    if N < 4:
+    if n < 4:
         print("N must be at least 4")
         sys.exit(1)
 
     solutions = []
-    solve_nqueens(N, 0, [], solutions)
-    print_solutions(solutions)
+    solve(n, 0, [], solutions)
+    for solution in solutions:
+        print(solution)
 
 if __name__ == "__main__":
     main()
