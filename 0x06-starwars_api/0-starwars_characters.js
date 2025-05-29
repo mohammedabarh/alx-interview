@@ -6,9 +6,9 @@ if (!movieId) {
   process.exit(1);
 }
 
-const apiUrl = `https://swapi-api.alx-tools.com/api/films/${movieId}/`;
+const url = `https://swapi-api.alx-tools.com/api/films/${movieId}/`;
 
-request(apiUrl, (err, res, body) => {
+request(url, (err, res, body) => {
   if (err) {
     console.error(err);
     process.exit(1);
@@ -16,21 +16,24 @@ request(apiUrl, (err, res, body) => {
   if (res.statusCode !== 200) {
     process.exit(1);
   }
-  const data = JSON.parse(body);
-  const characters = data.characters;
+  const film = JSON.parse(body);
+  const characters = film.characters;
 
-  function printCharacter(index) {
-    if (index >= characters.length) {
+  function printCharacter(i) {
+    if (i >= characters.length) {
       return;
     }
-    request(characters[index], (error, response, characterBody) => {
-      if (!error && response.statusCode === 200) {
-        const characterData = JSON.parse(characterBody);
-        console.log(characterData.name);
-        printCharacter(index + 1);
-      } else {
+    request(characters[i], (error, response, charBody) => {
+      if (error) {
+        console.error(error);
         process.exit(1);
       }
+      if (response.statusCode !== 200) {
+        process.exit(1);
+      }
+      const character = JSON.parse(charBody);
+      console.log(character.name);
+      printCharacter(i + 1);
     });
   }
 
